@@ -70,6 +70,7 @@ def generate_embedding(text: str) -> list[float]:
     return embedding.tolist()
 
 def generate_embeddings_batch(texts: list[str]) -> list[list[float]]:
+    
     embeddings = model.encode(
         texts,
         batch_size = 32,
