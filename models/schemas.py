@@ -1,5 +1,3 @@
-# models/schemas.py
-
 from pydantic import BaseModel
 from typing import List, Optional
 
@@ -41,8 +39,13 @@ class ProcessDocumentResponse(BaseModel):
     pageCount: int         # How many pages the PDF had
     message: str           # Human readable message
 
+
+class SourceReference(BaseModel):
+    filename: str
+    pageNumber: int
+
 class QueryResponse(BaseModel):
     # Sent back after answering a customer question
     answer: str                # The AI generated answer
-    sources: List[str]         # Which filenames were used as sources
+    sources: List[SourceReference]         # Which filenames were used as sources
     success: bool

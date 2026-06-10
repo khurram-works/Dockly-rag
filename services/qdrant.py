@@ -201,13 +201,13 @@ def ensure_collection_exists():
     if QDRANT_COLLECTION_NAME not in existing_names:
         qdrant.create_collection(
             collection_name = QDRANT_COLLECTION_NAME,
-            vectors_config = VectorParams(size = VECTOR_SIZE, distance = Distance.cosine)
+            vectors_config = VectorParams(size = VECTOR_SIZE, distance = Distance.COSINE)
         )
         print(f"Created Qdrant collection: {QDRANT_COLLECTION_NAME}")
     else:
         print(f"Qdrant collection already exists: {QDRANT_COLLECTION_NAME}")
 
-def store_chunks(chunks: list[str], embeddings: list[list[float]], company_id: str,document_id: str, filename: str) -> int:
+def store_chunks(chunks: list[dict], embeddings: list[list[float]], company_id: str,document_id: str, filename: str) -> int:
     points = []
     for i, (chunk, embedding) in enumerate(zip(chunks, embeddings)):
         point = PointStruct(
@@ -217,8 +217,9 @@ def store_chunks(chunks: list[str], embeddings: list[list[float]], company_id: s
                 "companyId": company_id,
                 "documentId": document_id,
                 "filename": filename,
-                "text": chunk,
-                "chunkIndex": i, 
+                "text": chunk["text"],
+                "chunkIndex": i,
+                "pageNumber": chunk["pageNumber"], 
             }
         )
 
@@ -230,6 +231,47 @@ def store_chunks(chunks: list[str], embeddings: list[list[float]], company_id: s
     )
 
     return len(points)
+
+def search_similar_chunks(query_embedding: list[float], company_id: str, limit: int=5) -> list[dict]:
+    results = qdrant.search(
+        collection_name = QDRANT_COLLECTION_NAME,
+        query_vector = query_embedding,
+        query_filter = Filter(
+            must = [
+                FieldCondition(
+                    key="companyId",
+                    match = MatchValue(value = company_id)
+                )
+            ]
+            
+        ),
+        limit = limit,
+        with_payload = True,
+    )
+
+    return [
+        {
+            "text": result.payload["text"],
+            "filename": result.payload["filename"],
+            "score": result.score,
+            "chunkIndex": result.payload["chunkIndex"],
+            "pageNumber": result.payload.get("pageNumber", 1)
+        }
+        for result in results
+    ]
+
+def delete_document_chunks(document_id: str):
+    qdrant.delete(
+        collection_name = QDRANT_COLLECTION_NAME,
+        points_selector = Filter(
+            must = [
+                FieldCondition(
+                    key = "documentId",
+                    match = MatchValue(value=document_id)
+                )
+            ]
+        )
+    )
     
 
     

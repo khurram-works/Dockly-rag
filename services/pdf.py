@@ -124,36 +124,36 @@ import tempfile
 import os
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-def download_and_extract_text(file_url: str) -> tuple[str, int]:
-    file = requests.get(file_url)
-    
-    if file.status_code != 200:
-        raise Exception(f"Failed to download the PDF: {file.status_code}")
+def download_and_extract_text(file_url: str) -> tuple[list[dict], int]:
+    response = requests.get(file_url, timeout=30)
+    response.raise_for_status()
     
 
     with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
-        tmp_file.write(file.content)
+        tmp_file.write(response.content)
         tmp_path = tmp_file.name
 
 
     try:
-        pdf_document = fitz.open(tmp_path)
-        page_count = len(pdf_document)
-
-        full_text = ""
-
-        for page_number in range(page_count):
-            page = pdf_document[page_count]
-            page_text = page.get_text()
-            full_text += f"\n[Page {page_number + 1}]\n{page_text}"
-
-        pdf_document.close()
-
-        return full_text, page_count
+        with fitz.open(tmp_path) as pdf_document:
+            page_count = len(pdf_document)
+    
+            pages= []
+            for page_number in range(page_count):
+                page = pdf_document[page_number]
+                page_text = page.get_text()
+                if page_text.strip():
+                    pages.append({
+                        "text": page_text,
+                        "pageNumber": page_number + 1
+                    })
+                print(f"Extracted {len(pages)} pages")
+        return pages, page_count
     finally:
-        os.unlink(tmp_path)
+        if os.path.exists(tmp_path):
+            os.unlink(tmp_path)
 
-def split_text_into_chunks(text: str) ->list[str]:
+def split_text_into_chunks(pages: list[dict]) ->list[dict]:
 
     splitter = RecursiveCharacterTextSplitter(
         chunk_size = 1000,
@@ -162,11 +162,21 @@ def split_text_into_chunks(text: str) ->list[str]:
         separators=["\n\n", "\n", ".", "!", "?", ",", " ", ""]
     )
 
-    chunks = splitter.split_text(text)
+    all_chunks = []
 
-    chunks = [chunk for chunk in chunks if len(chunk.strip())>50]
+    for page in pages:
+        page_chunks = splitter.split_text(page["text"])
 
-    return chunks
+        for chunk in page_chunks:
+            if len(chunk.strip()) > 50:
+                all_chunks.append({
+                    "text": chunk,
+                    "pageNumber": page["pageNumber"]
+                })
+
+    print(f"Created {len(all_chunks)} chunks")
+
+    return all_chunks
 
 
 
