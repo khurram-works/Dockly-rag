@@ -80,6 +80,7 @@ def search_similar_chunks(query_embedding: list[float], company_id: str, limit: 
         {
             "text": result.payload["text"],
             "filename": result.payload["filename"],
+            "documentId": result.payload["documentId"],
             "score": result.score,
             "chunkIndex": result.payload["chunkIndex"],
             "pageNumber": result.payload.get("pageNumber", 1)

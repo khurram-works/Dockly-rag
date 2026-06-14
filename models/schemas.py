@@ -21,6 +21,7 @@ class ProcessDocumentResponse(BaseModel):
 
 
 class SourceReference(BaseModel):
+    documentId: str
     filename: str
     pageNumber: int
 

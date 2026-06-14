@@ -15,6 +15,7 @@ def generate_answer(question: str, relevant_chunks: list[dict], company_name: st
     if key not in seen:
         seen.add(key)
         source_files.append({
+            "documentId": chunk["documentId"],
             "filename": chunk["filename"],
             "pageNumber": chunk["pageNumber"]
         })
