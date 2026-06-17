@@ -27,5 +27,6 @@ class SourceReference(BaseModel):
 
 class QueryResponse(BaseModel):
     answer: str                
-    sources: List[SourceReference] 
+    sources: List[SourceReference] | None = None
+    foundAnswer: bool
     success: bool
