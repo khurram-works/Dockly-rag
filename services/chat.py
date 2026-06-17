@@ -3,7 +3,7 @@ from config import GROQ_API_KEY
 
 groq_client = Groq(api_key = GROQ_API_KEY)
 
-def generate_answer(question: str, relevant_chunks: list[dict], company_name: str = "the company", conversation_history: list[dict]= None)-> tuple[str, list[dict]]:
+def generate_answer(question: str, relevant_chunks: list[dict], company_name: str = "the company", conversation_history: list[dict]= None)-> tuple[str, list[dict], bool]:
   if conversation_history is None:
     conversation_history = []
   seen = set()
@@ -58,7 +58,15 @@ Context from {company_name}'s documents:
     )
   answer = response.choices[0].message.content
 
-  return answer, source_files
+  found_answer = (
+    answer.strip()
+    != "I don't have information about that in my knowledge base. Please contact our support team directly."
+)
+
+  if not found_answer:
+      source_files = None
+
+  return answer, source_files, found_answer
 
 
 
