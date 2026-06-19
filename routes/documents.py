@@ -91,13 +91,6 @@ async def query_documents(request: QueryRequest):
             limit=5
         )
 
-        # if len(relevant_chunks) == 0:
-        #     return QueryResponse(
-        #         answer="I don't have any documents in my knowledge base yet. Please ask the company to upload their documents.",
-        #         sources=[],
-        #         success=True
-        #     )
-
         answer, sources, foundAnswer = generate_answer(
             question=request.question,
             relevant_chunks=relevant_chunks,
