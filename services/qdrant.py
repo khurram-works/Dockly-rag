@@ -1,8 +1,11 @@
 from qdrant_client import QdrantClient
-from qdrant_client.models import (Distance, VectorParams, Document, PointStruct, FieldCondition, MatchValue, Filter)
+from qdrant_client.models import (Distance, VectorParams, PointStruct, FieldCondition, MatchValue, Filter)
 from config import QDRANT_API_KEY, QDRANT_COLLECTION_NAME, QDRANT_URL, VECTOR_SIZE
 import uuid
 from qdrant_client import models 
+
+
+
 
 qdrant = QdrantClient(
     url = QDRANT_URL,
@@ -11,6 +14,7 @@ qdrant = QdrantClient(
 )
 
 def ensure_collection_exists():
+
     existing = qdrant.get_collections()
     existing_names = [col.name for col in existing.collections]
     if QDRANT_COLLECTION_NAME not in existing_names:
