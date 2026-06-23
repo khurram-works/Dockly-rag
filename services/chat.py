@@ -81,7 +81,7 @@ Using the context provided above, answer the following user query. Remember your
     
     answer = response.choices[0].message.content
 
-    # 5. Clean up checking logic to catch standard refusals as well
+
     normalized_answer = answer.strip().lower()
     fallback_msg = "I don't have information about that in my knowledge base. Please contact our support team directly."
     
