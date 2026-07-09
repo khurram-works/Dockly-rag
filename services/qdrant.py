@@ -4,9 +4,6 @@ from config import QDRANT_API_KEY, QDRANT_COLLECTION_NAME, QDRANT_URL, VECTOR_SI
 import uuid
 from qdrant_client import models 
 
-
-
-
 qdrant = QdrantClient(
     url = QDRANT_URL,
     api_key= QDRANT_API_KEY,
