@@ -5,7 +5,7 @@ from models.schemas import (
     QueryRequest,
     QueryResponse
 )
-from services.pdf import download_and_extract_text, split_text_into_chunks
+from services.document_parser import download_and_parse_document, split_text_into_chunks
 from services.embeddings import generate_embeddings_batch, generate_embedding
 from services.qdrant import ensure_collection_exists, store_chunks, search_similar_chunks, delete_document_chunks
 from services.chat import generate_answer
@@ -18,7 +18,7 @@ async def process_document(request: ProcessDocumentRequest):
     try:
         ensure_collection_exists()
         print(f"Downloading PDF: {request.filename}")
-        pages, page_count = download_and_extract_text(request.fileUrl)
+        pages, page_count = download_and_parse_document(request.fileUrl, request.filename)
         if not pages:
             raise HTTPException(
                 status_code=400,
