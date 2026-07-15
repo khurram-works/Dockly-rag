@@ -22,7 +22,7 @@ async def process_document(request: ProcessDocumentRequest):
         if not pages:
             raise HTTPException(
                 status_code=400,
-                detail="Could not extract text from PDF. The file may be a scanned image."
+                detail="Could not extract text from file. The file may be empty."
             )
         print(f"Splitting text into chunks...")
         chunks = split_text_into_chunks(pages)
