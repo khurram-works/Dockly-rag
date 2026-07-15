@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-from routes.documents import router
+from api.routes.documents import router
 from services.qdrant import ensure_collection_exists
 from config import FRONTEND_URL, NODE_BACKEND_URL
 
