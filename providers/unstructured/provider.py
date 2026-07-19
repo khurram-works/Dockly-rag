@@ -5,6 +5,7 @@ from domain.enums.element_type import ElementType
 from domain.models.document_metadata import DocumentMetadata
 from domain.models.coordinates import Coordinates
 from domain.enums.parser_strategy import ParsingStrategy
+from domain.models.parsed_document import ParsedDocument
 
 
 from pathlib import Path
@@ -53,7 +54,7 @@ class UnstructuredProvider:
       ParserType.IMAGE: self._partition_image,
     }
 
-  def partition(self,file_path: Path, strategy: DocumentStrategy) -> tuple[list[DocumentElement], int]:
+  def partition(self,file_path: Path, strategy: DocumentStrategy) -> ParsedDocument:
 
     handler = self._handlers.get(strategy.parser)
   
@@ -70,14 +71,15 @@ class UnstructuredProvider:
       self,
       partitioner,
       file_path: Path,
-      strategy: ParsingStrategy
+      strategy: ParsingStrategy,
       **kwargs,
-    ) -> tuple[list[DocumentElement], int]:
+    ) -> ParsedDocument:
 
     try:
 
       elements = partitioner(
         filename=str(file_path),
+        strategy = strategy.value,
         **kwargs,
       )
 
@@ -88,7 +90,10 @@ class UnstructuredProvider:
           for element in elements
         ]
 
-      return document_elements, page_count
+      return ParsedDocument(
+        page_count=page_count,
+        elements=document_elements
+      )
 
     except Exception as e:
         logger.exception(
@@ -109,34 +114,34 @@ class UnstructuredProvider:
       self,
       file_path: Path,
       strategy: DocumentStrategy,
-    ) -> tuple[list[DocumentElement], int]:
+    ) -> ParsedDocument:
 
     return self._partition_with(
       partitioner=partition_pdf,
       file_path=file_path,
-      strategy=strategy.parsing_strategy.value,
+      strategy=strategy.parsing_strategy,
     )
 
   
 
-  def _partition_generic(self, file_path: Path, strategy: DocumentStrategy) -> tuple[list[DocumentElement], int]:
+  def _partition_generic(self, file_path: Path, strategy: DocumentStrategy) -> ParsedDocument:
 
     return self._partition_with(
       partitioner=partition,
       file_path=file_path,
-      strategy=strategy.parsing_strategy.value,
+      strategy=strategy.parsing_strategy,
     )
 
   def _partition_image(
       self,
       file_path: Path,
       strategy: DocumentStrategy,
-    ) -> tuple[list[DocumentElement], int]:
+    ) -> ParsedDocument:
 
     return self._partition_with(
       partitioner=partition_image,
       file_path=file_path,
-      strategy=strategy.parsing_strategy.value,
+      strategy=strategy.parsing_strategy,
     )
 
 
