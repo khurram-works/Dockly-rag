@@ -1,9 +1,10 @@
 from dataclasses import dataclass
-from domain.models.document_profile import DocumentProfile
-from domain.models.document_strategy import DocumentStrategy
 from domain.models.document_element import DocumentElement
 
 @dataclass(slots=True)
 class ParsedDocument:
-    page_count: int
+    document_id: str
+    filename: str
+    company_id: str
+    page_count: int | None
     elements: list[DocumentElement]

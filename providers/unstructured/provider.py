@@ -6,6 +6,7 @@ from domain.models.document_metadata import DocumentMetadata
 from domain.models.coordinates import Coordinates
 from domain.enums.parser_strategy import ParsingStrategy
 from domain.models.parsed_document import ParsedDocument
+from domain.models.document_profile import DocumentProfile
 
 
 from pathlib import Path
@@ -54,7 +55,13 @@ class UnstructuredProvider:
       ParserType.IMAGE: self._partition_image,
     }
 
-  def partition(self,file_path: Path, strategy: DocumentStrategy) -> ParsedDocument:
+  def partition(self,file_path: Path, profile: DocumentProfile, strategy: DocumentStrategy) -> ParsedDocument:
+
+    if not file_path.exists():
+      raise PartitioningError(
+            f"No partition Filepath provided for parser: {file_path}"
+        )
+
 
     handler = self._handlers.get(strategy.parser)
   
@@ -63,13 +70,14 @@ class UnstructuredProvider:
             f"No partition handler for parser: {strategy.parser}"
         )
     
-    return handler(file_path=file_path, strategy=strategy)
+    return handler(file_path=file_path, strategy=strategy, profile=profile)
 
   
 
   def _partition_with(
       self,
       partitioner,
+      profile:DocumentProfile,
       file_path: Path,
       strategy: ParsingStrategy,
       **kwargs,
@@ -91,20 +99,31 @@ class UnstructuredProvider:
         ]
 
       return ParsedDocument(
+        document_id=profile.document_id,
+        company_id=profile.company_id,
+        filename=profile.filename,
         page_count=page_count,
         elements=document_elements
       )
 
     except Exception as e:
         logger.exception(
-          "Failed partitioning '%s' using parser '%s'",
-          file_path,
-          strategy,
-        )
+    "Partition failed "
+    "document=%s "
+    "company=%s "
+    "file=%s "
+    "parser=%s "
+    "strategy=%s",
+    profile.document_id,
+    profile.company_id,
+    file_path,
+    strategy.parser,
+    strategy.parsing_strategy,
+)
 
         raise PartitioningError(
-          f"Failed to partition document '{file_path.name}'."
-        ) from e
+    f"Failed to partition '{file_path.name}': {e}"
+) from e
 
 
 
@@ -113,6 +132,7 @@ class UnstructuredProvider:
   def _partition_pdf(
       self,
       file_path: Path,
+      profile:DocumentProfile,
       strategy: DocumentStrategy,
     ) -> ParsedDocument:
 
@@ -120,21 +140,24 @@ class UnstructuredProvider:
       partitioner=partition_pdf,
       file_path=file_path,
       strategy=strategy.parsing_strategy,
+      profile=profile
     )
 
   
 
-  def _partition_generic(self, file_path: Path, strategy: DocumentStrategy) -> ParsedDocument:
+  def _partition_generic(self, file_path: Path, profile: DocumentProfile, strategy: DocumentStrategy) -> ParsedDocument:
 
     return self._partition_with(
       partitioner=partition,
       file_path=file_path,
       strategy=strategy.parsing_strategy,
+      profile=profile
     )
 
   def _partition_image(
       self,
       file_path: Path,
+      profile:DocumentProfile,
       strategy: DocumentStrategy,
     ) -> ParsedDocument:
 
@@ -142,6 +165,7 @@ class UnstructuredProvider:
       partitioner=partition_image,
       file_path=file_path,
       strategy=strategy.parsing_strategy,
+      profile=profile
     )
 
 
@@ -150,7 +174,8 @@ class UnstructuredProvider:
     return DocumentElement(
       text=getattr(element, "text", "") or "",
       element_type = self._to_element_type(element),
-      metadata = self._to_document_metadata(element)
+      metadata = self._to_document_metadata(element),
+      source_element=element
     )
 
 
@@ -199,7 +224,7 @@ class UnstructuredProvider:
     ]
 
     if not page_numbers:
-        return 0
+        return None
 
     return max(page_numbers)
 
