@@ -14,3 +14,5 @@ class DocumentMetadata:
     parent_section: str | None = None
 
     coordinates: Coordinates | None = None
+
+    text_as_html: str | None = None

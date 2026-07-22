@@ -6,6 +6,8 @@ from domain.models.document_metadata import DocumentMetadata
 
 @dataclass(slots=True)
 class DocumentElement:
+    element_id: str | None
+
     text: str
 
     element_type: ElementType

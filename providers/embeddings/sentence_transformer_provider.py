@@ -48,6 +48,9 @@ class SentenceTransformerEmbeddingProvider(
         self,
         text: str,
     ) -> Embedding:
+        
+        if not text:
+            raise ValueError("Query text cannot be empty.")
 
         vector = self._model.encode_query(
             text,
@@ -64,11 +67,6 @@ class SentenceTransformerEmbeddingProvider(
         vector,
     ) -> Embedding:
 
-        return Embedding(
-            values=tuple(
-                float(value)
-                for value in vector
-            )
-        )
+        return Embedding(values=tuple(vector.tolist()))
 
 

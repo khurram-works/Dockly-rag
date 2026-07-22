@@ -1,16 +1,18 @@
 from dataclasses import dataclass
+from typing import Optional
 
 from domain.models.coordinates import Coordinates
 
 
-@dataclass(slots=True)
+@dataclass
 class ChunkMetadata:
+
     page_numbers: list[int]
 
     languages: list[str]
 
-    section_title: str | None = None
+    coordinates: Optional[list[Coordinates]]
 
-    parent_section: str | None = None
+    source_element_ids: list[str]
 
-    coordinates: list[Coordinates] | None = None
+    text_as_html: Optional[str] = None
