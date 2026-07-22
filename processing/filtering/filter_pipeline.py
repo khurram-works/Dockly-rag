@@ -5,6 +5,7 @@ from domain.models.parsed_document import ParsedDocument
 from processing.filtering.filters.base_filter import BaseFilter
 
 
+
 class FilterPipeline:
 
     def __init__(
