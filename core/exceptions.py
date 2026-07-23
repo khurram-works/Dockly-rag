@@ -24,3 +24,4 @@ class StorageError(RAGPipelineError):
 
 class RetrievalError(RAGPipelineError):
     """Raised when document retrieval fails."""
+

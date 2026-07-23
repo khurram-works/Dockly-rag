@@ -1,6 +1,6 @@
 from domain.models.embedded_chunk import EmbeddedChunk
 from domain.models.document_chunk import DocumentChunk
-from providers.embeddings.sentence_transformer_provider import EmbeddingProvider
+from domain.interfaces.embedding_provider import EmbeddingProvider
 
 
 class EmbeddingService:
