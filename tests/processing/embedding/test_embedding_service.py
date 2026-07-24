@@ -23,6 +23,8 @@ def create_chunk(
         metadata=ChunkMetadata(
             page_numbers=[1],
             languages=["eng"],
+            coordinates=None,
+            source_element_ids=[],
         ),
     )
 
@@ -46,33 +48,39 @@ def test_embedding_service_embeds_all_chunks():
 
     provider = Mock()
 
+    first_embedding = Embedding(
+        values=(0.1, 0.2, 0.3),
+    )
+
+    second_embedding = Embedding(
+        values=(0.4, 0.5, 0.6),
+    )
+
     provider.embed_documents.return_value = [
-        Embedding(
-            values=(0.1, 0.2, 0.3),
-        ),
-        Embedding(
-            values=(0.4, 0.5, 0.6),
-        ),
+        first_embedding,
+        second_embedding,
     ]
 
-    chunks = [
-        create_chunk(
-            index=0,
-            text="First chunk",
-        ),
-        create_chunk(
-            index=1,
-            text="Second chunk",
-        ),
-    ]
+    first_chunk = create_chunk(
+        index=0,
+        text="First chunk",
+    )
+
+    second_chunk = create_chunk(
+        index=1,
+        text="Second chunk",
+    )
 
     service = EmbeddingService(
         provider=provider,
     )
 
-    result = service.embed_chunks(chunks)
-
-    assert len(result) == 2
+    result = service.embed_chunks(
+        [
+            first_chunk,
+            second_chunk,
+        ]
+    )
 
     provider.embed_documents.assert_called_once_with(
         [
@@ -80,6 +88,17 @@ def test_embedding_service_embeds_all_chunks():
             "Second chunk",
         ]
     )
+
+    assert result == [
+        EmbeddedChunk(
+            chunk=first_chunk,
+            embedding=first_embedding,
+        ),
+        EmbeddedChunk(
+            chunk=second_chunk,
+            embedding=second_embedding,
+        ),
+    ]
 
 
 def test_embedding_service_preserves_chunk_embedding_alignment():

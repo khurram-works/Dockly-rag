@@ -5,7 +5,7 @@ from unstructured.partition.auto import partition
 from unstructured.partition.image import partition_image
 from unstructured.partition.pdf import partition_pdf
 
-from core.exceptions import PartitioningError
+from core.exception import PartitioningError
 
 from domain.enums.element_type import ElementType
 from domain.enums.parser_strategy import ParsingStrategy

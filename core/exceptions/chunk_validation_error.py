@@ -1,0 +1,2 @@
+class ChunkValidationError(Exception):
+    pass
