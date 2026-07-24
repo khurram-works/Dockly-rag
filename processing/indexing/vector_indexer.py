@@ -1,10 +1,18 @@
 from domain.models.embedded_chunk import EmbeddedChunk
 from domain.models.indexable_point import IndexablePoint
 
+from processing.indexing.payload_builder import PayloadBuilder
 from processing.indexing.point_id import build_point_id
 
 
 class VectorIndexer:
+
+    def __init__(
+        self,
+        payload_builder: PayloadBuilder,
+    ) -> None:
+
+        self._payload_builder = payload_builder
 
     def index(
         self,
@@ -30,13 +38,9 @@ class VectorIndexer:
             chunk_index=chunk.chunk_index,
         )
 
-        payload = {
-            "document_id": chunk.document_id,
-            "filename": chunk.filename,
-            "company_id": chunk.company_id,
-            "chunk_index": chunk.chunk_index,
-            "text": chunk.text,
-        }
+        payload = self._payload_builder.build(
+            chunk
+        )
 
         return IndexablePoint(
             point_id=point_id,

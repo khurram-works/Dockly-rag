@@ -3,7 +3,7 @@ from domain.models.document_strategy import DocumentStrategy
 
 from processing.planning.strategy_config import STRATEGY_CONFIG
 
-from core.exceptions import UnsupportedDocumentError
+from core.exception import UnsupportedDocumentError
 
 class StrategyPlanner:
 

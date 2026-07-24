@@ -15,3 +15,7 @@ class ChunkMetadata:
     source_element_ids: list[str]
 
     text_as_html: str | None = None
+
+    # section_titles: list[str] | None = None
+
+    # parent_sections: list[str] | None = None

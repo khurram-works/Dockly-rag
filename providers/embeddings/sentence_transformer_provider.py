@@ -3,8 +3,14 @@ from sentence_transformers import SentenceTransformer
 from domain.interfaces.embedding_provider import (
     EmbeddingProvider,
 )
-from domain.models.embeddings import Embedding
-from domain.models.embedding_config import EmbeddingConfig
+
+from domain.models.embedding_config import (
+    EmbeddingConfig,
+)
+
+from domain.models.embeddings import (
+    Embedding,
+)
 
 
 class SentenceTransformerEmbeddingProvider(
@@ -28,9 +34,10 @@ class SentenceTransformerEmbeddingProvider(
     ) -> list[Embedding]:
 
         if not texts:
+
             return []
 
-        vectors = self._model.encode_document(
+        vectors = self._model.encode(
             texts,
             batch_size=self._config.batch_size,
             normalize_embeddings=(
@@ -40,7 +47,9 @@ class SentenceTransformerEmbeddingProvider(
         )
 
         return [
-            self._to_embedding(vector)
+            self._to_embedding(
+                vector
+            )
             for vector in vectors
         ]
 
@@ -48,11 +57,14 @@ class SentenceTransformerEmbeddingProvider(
         self,
         text: str,
     ) -> Embedding:
-        
-        if not text:
-            raise ValueError("Query text cannot be empty.")
 
-        vector = self._model.encode_query(
+        if not text.strip():
+
+            raise ValueError(
+                "Query text cannot be empty."
+            )
+
+        vector = self._model.encode(
             text,
             normalize_embeddings=(
                 self._config.normalize_embeddings
@@ -60,13 +72,17 @@ class SentenceTransformerEmbeddingProvider(
             convert_to_numpy=True,
         )
 
-        return self._to_embedding(vector)
+        return self._to_embedding(
+            vector
+        )
 
     def _to_embedding(
         self,
         vector,
     ) -> Embedding:
 
-        return Embedding(values=tuple(vector.tolist()))
-
-
+        return Embedding(
+            values=tuple(
+                vector.tolist()
+            )
+        )
