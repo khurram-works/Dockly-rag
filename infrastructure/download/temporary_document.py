@@ -7,8 +7,10 @@ from infrastructure.download.http_document_downloader import (
 )
 
 
-class TemporaryDocument:
 
+
+# infrastructure/download/temporary_document.py
+class TemporaryDocument:
     def __init__(
         self,
         downloader: HttpDocumentDownloader,
@@ -21,19 +23,13 @@ class TemporaryDocument:
         self,
         file_url: str,
         filename: str,
-    ) -> Iterator[Path]:
-
-        file_path = self._downloader.download(
+    ) -> Iterator[tuple[Path, int]]: 
+        file_path, file_size = self._downloader.download(
             file_url=file_url,
             filename=filename,
         )
 
         try:
-
-            yield file_path
-
+            yield file_path, file_size
         finally:
-
-            file_path.unlink(
-                missing_ok=True
-            )
+            file_path.unlink(missing_ok=True)
