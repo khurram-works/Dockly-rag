@@ -58,17 +58,10 @@ class DocumentProcessingOrchestrator:
         profile: DocumentProfile,
     ) -> int:
 
-        # --------------------------------------------------
-        # 1. Choose parsing strategy
-        # --------------------------------------------------
 
         strategy = self._strategy_planner.plan(
             profile
         )
-
-        # --------------------------------------------------
-        # 2. Partition document
-        # --------------------------------------------------
 
         parsed_document = self._partitioner.partition(
             file_path=file_path,
@@ -76,25 +69,17 @@ class DocumentProcessingOrchestrator:
             strategy=strategy,
         )
 
-        # --------------------------------------------------
-        # 3. Filter document elements
-        # --------------------------------------------------
 
         filtered_document = self._filter_pipeline.apply(
             parsed_document
         )
 
-        # --------------------------------------------------
-        # 4. Create chunks
-        # --------------------------------------------------
 
         chunks = self._chunker.chunk(
             filtered_document
         )
 
-        # --------------------------------------------------
-        # 5. Validate every chunk
-        # --------------------------------------------------
+
 
         for chunk in chunks:
 
@@ -102,9 +87,7 @@ class DocumentProcessingOrchestrator:
                 chunk
             )
 
-        # --------------------------------------------------
-        # 6. Generate embeddings
-        # --------------------------------------------------
+
 
         embedded_chunks = (
             self._embedding_service.embed_chunks(
@@ -112,9 +95,7 @@ class DocumentProcessingOrchestrator:
             )
         )
 
-        # --------------------------------------------------
-        # 7. Index into vector database
-        # --------------------------------------------------
+
 
         self._indexing_service.index(
             embedded_chunks
