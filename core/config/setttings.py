@@ -10,7 +10,7 @@ class Settings(BaseSettings):
 
     node_backend_url: str
     frontend_url: str
-    QDRANT_COLLECTION_NAME: str
+    qdrant_collection_name: str
 
     model_config = SettingsConfigDict(
         env_file=".env",

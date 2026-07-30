@@ -16,49 +16,42 @@ from processing.orchestration.document_processing_orchestrator import (
     DocumentProcessingOrchestrator,
 )
 
+from processing.inspection.document_inspector import DocumentInspector
+
+
+
 
 class DocumentProcessingService:
-
     def __init__(
         self,
         temporary_document: TemporaryDocument,
         orchestrator: DocumentProcessingOrchestrator,
+        inspector: DocumentInspector,  # ADD PARAMETER
     ) -> None:
-
-        self._temporary_document = (
-            temporary_document
-        )
-
+        self._temporary_document = temporary_document
         self._orchestrator = orchestrator
+        self._inspector = inspector  # STORE INSPECTOR
 
     def process(
         self,
         request: ProcessDocumentRequest,
     ) -> int:
-
-        extension = Path(
-            request.filename
-        ).suffix.lower()
-
-        profile = DocumentProfile(
+        # USE INSPECTOR INSTEAD OF MANUAL CREATION
+        profile = self._inspector.inspect(
             document_id=request.documentId,
             company_id=request.companyId,
             filename=request.filename,
-            extension=extension,
-            mime_type=None,
-            file_size=0,
+            file_size=request.file_size,
+            mime_type=request.mime_type,
         )
 
         with self._temporary_document.open(
             file_url=request.fileUrl,
             filename=request.filename,
         ) as file_path:
-
-            chunks_created = (
-                self._orchestrator.process(
-                    file_path=file_path,
-                    profile=profile,
-                )
+            chunks_created = self._orchestrator.process(
+                file_path=file_path,
+                profile=profile,
             )
 
         return chunks_created

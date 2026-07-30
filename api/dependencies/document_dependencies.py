@@ -55,6 +55,14 @@ from domain.models.document_chunking_strategy import (
     DocumentChunkingStrategy,
 )
 
+from processing.filtering.filters.empty_text_filter import EmptyTextFilter
+from processing.filtering.filters.header_footer_filter import HeaderFooterFilter
+from processing.filtering.filters.repeated_element_filter import RepeatedElementFilter
+from processing.inspection.document_inspector import DocumentInspector
+
+
+
+
 
 
 def get_qdrant_client() -> QdrantClient:
@@ -83,7 +91,11 @@ def get_partitioner() -> DocumentPartitioner:
 def get_filter_pipeline() -> FilterPipeline:
 
     return FilterPipeline(
-        filters=[],
+        filters=[
+            EmptyTextFilter(),
+            HeaderFooterFilter(),
+            RepeatedElementFilter(),
+        ],
     )
 
 def get_chunker() -> BaseChunker:
@@ -179,8 +191,24 @@ def get_document_orchestrator() -> (
 
     )
 
-def get_document_controller() -> DocumentController:
 
+def get_document_inspector() -> DocumentInspector:
+    return DocumentInspector()
+ 
+def get_document_processing_service(
+    inspector: DocumentInspector = Depends(get_document_inspector),
+) -> DocumentProcessingService:
+    temporary_document = TemporaryDocument(
+        downloader=HttpDocumentDownloader()
+    )
+    
+    return DocumentProcessingService(
+        temporary_document=temporary_document,
+        orchestrator=get_document_orchestrator(),
+        inspector=inspector, 
+    )
+
+def get_document_controller() -> DocumentController:
     return DocumentController(
-        orchestrator=get_document_orchestrator()
+        processing_service=get_document_processing_service() 
     )
