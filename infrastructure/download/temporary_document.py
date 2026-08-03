@@ -6,10 +6,6 @@ from infrastructure.download.http_document_downloader import (
     HttpDocumentDownloader,
 )
 
-
-
-
-# infrastructure/download/temporary_document.py
 class TemporaryDocument:
     def __init__(
         self,

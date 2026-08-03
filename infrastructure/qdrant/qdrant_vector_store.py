@@ -3,23 +3,31 @@ from qdrant_client import QdrantClient, models
 from domain.models.indexable_point import IndexablePoint
 from domain.interfaces.vector_store import VectorStore
 
+from tenacity import retry, stop_after_attempt, wait_exponential
+from qdrant_client import QdrantClient, models
+from qdrant_client.http.exceptions import UnexpectedResponse
+from tenacity import retry_if_exception_type
+
 
 class QdrantVectorStore(VectorStore):
-
     def __init__(
         self,
         client: QdrantClient,
         collection_name: str,
     ) -> None:
-
         self._client = client
         self._collection_name = collection_name
 
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=2, max=10),
+        retry=retry_if_exception_type((UnexpectedResponse, ConnectionError)),
+    )
+    
     def upsert(
         self,
         points: list[IndexablePoint],
     ) -> None:
-
         if not points:
             return
 
