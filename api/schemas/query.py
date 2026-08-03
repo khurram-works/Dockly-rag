@@ -1,26 +1,23 @@
-
-
-from typing import Any
-
+# api/schemas/query.py
+from typing import Any  # Remove List import
 from pydantic import BaseModel, Field
-
 
 class QueryRequest(BaseModel):
     question: str
-    companyId: str
-    conversationHistory: list[dict[str, Any]] = Field(
-        default_factory=list
+    companyId: str = Field(alias="companyId")
+    conversationHistory: list[dict[str, Any]] = Field(  # Use lowercase list
+        default_factory=list,
+        alias="conversationHistory"
     )
 
 class SourceReference(BaseModel):
-    documentId: str
+    documentId: str = Field(alias="documentId")
     filename: str
-    pageNumbers: list[int]
-    chunkIndex: int
-
+    pageNumbers: list[int] = Field(alias="pageNumbers")  # Use lowercase list
+    chunkIndex: int = Field(alias="chunkIndex")
 
 class QueryResponse(BaseModel):
     answer: str
-    sources: List[SourceReference] | None = None
+    sources: list[SourceReference] | None = None  # Use lowercase list
     foundAnswer: bool
     success: bool

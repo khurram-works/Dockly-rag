@@ -30,6 +30,9 @@ from processing.indexing.indexing_service import (
     IndexingService,
 )
 
+from core.logging import get_logger
+ 
+logger = get_logger(__name__)
 
 class DocumentProcessingOrchestrator:
 
@@ -56,49 +59,73 @@ class DocumentProcessingOrchestrator:
         self,
         file_path: Path,
         profile: DocumentProfile,
-    ) -> int:
+    ) -> tuple[int, int | None ]:
+        try:
+            logger.info(
+                "Starting document processing",
+                document_id=profile.document_id,
+                company_id=profile.company_id,
+                filename=profile.filename,
+            )
 
+            strategy = self._strategy_planner.plan(profile)
+            logger.info(
+                "Strategy selected",
+                parser=strategy.parser,
+                parsing_strategy=strategy.parsing_strategy
+            )
 
-        strategy = self._strategy_planner.plan(
-            profile
-        )
+ 
+            parsed_document = self._partitioner.partition(
+                file_path=file_path,
+                profile=profile,
+                strategy=strategy,
+            )
+            logger.info(
+                "Document partitioned",
+                elements_count=len(parsed_document.elements)
+            )
 
-        parsed_document = self._partitioner.partition(
-            file_path=file_path,
-            profile=profile,
-            strategy=strategy,
-        )
+            filtered_document = self._filter_pipeline.apply(parsed_document)
+            logger.info(
+                "Document filtering completed", 
+                filtered_element_count=len(filtered_document.elements)
+            )
 
-
-        filtered_document = self._filter_pipeline.apply(
-            parsed_document
-        )
-
-
-        chunks = self._chunker.chunk(
-            filtered_document
-        )
-
-
-
-        for chunk in chunks:
-
-            self._chunk_validator.validate(
-                chunk
+            chunks = self._chunker.chunk(filtered_document)
+            logger.info(
+                "Chunks created", 
+                chunks_count=len(chunks)
             )
 
 
+            for chunk in chunks:
+                self._chunk_validator.validate(chunk)
 
-        embedded_chunks = (
-            self._embedding_service.embed_chunks(
-                chunks
+
+            embedded_chunks = self._embedding_service.embed_chunks(chunks)
+            logger.info(
+                "Embeddings generated", 
+                embedded_count=len(embedded_chunks)
             )
-        )
 
 
+            self._indexing_service.index(embedded_chunks)
+            logger.info("Chunks indexed in vector database", indexed_count=len(embedded_chunks))
 
-        self._indexing_service.index(
-            embedded_chunks
-        )
+            logger.info(
+                "Document processing completed",
+                document_id=profile.document_id,
+                chunks_created=len(chunks),
+            )
 
-        return len(chunks)
+            return len(chunks), parsed_document.page_count
+            
+        except Exception as e:
+            logger.exception(
+                "Processing failed document=%s company=%s file=%s",
+                profile.document_id,
+                profile.company_id,
+                file_path,
+            )
+            raise

@@ -26,32 +26,31 @@ class DocumentProcessingService:
         self,
         temporary_document: TemporaryDocument,
         orchestrator: DocumentProcessingOrchestrator,
-        inspector: DocumentInspector,  # ADD PARAMETER
+        inspector: DocumentInspector,
     ) -> None:
         self._temporary_document = temporary_document
         self._orchestrator = orchestrator
-        self._inspector = inspector  # STORE INSPECTOR
+        self._inspector = inspector
 
     def process(
         self,
         request: ProcessDocumentRequest,
-    ) -> int:
-        # USE INSPECTOR INSTEAD OF MANUAL CREATION
+    ) -> tuple[int, int | None]:
         profile = self._inspector.inspect(
-            document_id=request.documentId,
-            company_id=request.companyId,
+            document_id=request.document_id,
+            company_id=request.company_id,
             filename=request.filename,
             file_size=request.file_size,
             mime_type=request.mime_type,
         )
 
         with self._temporary_document.open(
-            file_url=request.fileUrl,
+            file_url=request.file_url,
             filename=request.filename,
-        ) as file_path:
-            chunks_created = self._orchestrator.process(
+        ) as (file_path, download_file_size):
+            chunks_created, page_count= self._orchestrator.process(
                 file_path=file_path,
                 profile=profile,
             )
 
-        return chunks_created
+        return chunks_created, page_count

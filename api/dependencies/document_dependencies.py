@@ -3,7 +3,7 @@ from qdrant_client import QdrantClient
 
 from api.controllers.document_controller import DocumentController
 
-from core.config.setttings import settings
+from core.config.settings import settings
 
 from processing.orchestration.document_processing_orchestrator import (
     DocumentProcessingOrchestrator,
@@ -14,6 +14,10 @@ from processing.planning.strategy_planner import StrategyPlanner
 from processing.partitioning.document_partitioner import (
     DocumentPartitioner,
 )
+
+from infrastructure.download.temporary_document import TemporaryDocument
+from infrastructure.download.http_document_downloader import HttpDocumentDownloader
+
 
 from processing.filtering.filter_pipeline import FilterPipeline
 
@@ -60,10 +64,11 @@ from processing.filtering.filters.header_footer_filter import HeaderFooterFilter
 from processing.filtering.filters.repeated_element_filter import RepeatedElementFilter
 from processing.inspection.document_inspector import DocumentInspector
 
-
-
-
-
+from api.services.document_processing_service import DocumentProcessingService
+from infrastructure.qdrant.qdrant_collection_manager import QdrantCollectionManager
+from domain.models.vector_collection_config import VectorCollectionConfig
+from qdrant_client.models import Distance
+from core.constants import EMBEDDING_DIMENSION
 
 def get_qdrant_client() -> QdrantClient:
 
@@ -71,6 +76,21 @@ def get_qdrant_client() -> QdrantClient:
         url=settings.qdrant_url,
         api_key=settings.qdrant_api_key,
     )
+
+def get_collection_manager(
+    client: QdrantClient = Depends(get_qdrant_client),
+) -> QdrantCollectionManager:
+    return QdrantCollectionManager(client=client)
+
+def get_vector_collection_config() -> VectorCollectionConfig:
+    return VectorCollectionConfig(
+        collection_name=settings.qdrant_collection_name,
+        vector_size=EMBEDDING_DIMENSION,
+        distance=Distance.COSINE,
+    )
+
+
+
 
 def get_unstructured_provider() -> UnstructuredProvider:
 
@@ -89,13 +109,15 @@ def get_partitioner() -> DocumentPartitioner:
     )
 
 def get_filter_pipeline() -> FilterPipeline:
-
     return FilterPipeline(
         filters=[
-            EmptyTextFilter(),
+            EmptyTextFilter(),  
             HeaderFooterFilter(),
-            RepeatedElementFilter(),
-        ],
+            RepeatedElementFilter(
+                minimum_occurrences=2, 
+                maximum_text_length=200,
+            ),
+        ]
     )
 
 def get_chunker() -> BaseChunker:
@@ -197,7 +219,7 @@ def get_document_inspector() -> DocumentInspector:
  
 def get_document_processing_service(
     inspector: DocumentInspector = Depends(get_document_inspector),
-) -> DocumentProcessingService:
+) -> "DocumentProcessingService":
     temporary_document = TemporaryDocument(
         downloader=HttpDocumentDownloader()
     )
@@ -208,7 +230,9 @@ def get_document_processing_service(
         inspector=inspector, 
     )
 
-def get_document_controller() -> DocumentController:
+def get_document_controller(
+    processing_service: DocumentProcessingService = Depends(get_document_processing_service)
+) -> DocumentController:
     return DocumentController(
-        processing_service=get_document_processing_service() 
+        processing_service=processing_service 
     )
