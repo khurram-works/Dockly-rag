@@ -7,7 +7,6 @@ from core.config.settings import settings
 
 class AnswerGenerator:
     def __init__(self) -> None:
-        # Use settings instead of os.getenv
         self._client = Groq(api_key=settings.groq_api_key) 
         self._prompt_builder = PromptBuilder()
     
@@ -26,7 +25,7 @@ class AnswerGenerator:
         )
         
         response = self._client.chat.completions.create(
-            model="llama-3.1-8b-instant",
+            model="openai/gpt-oss-120b",
             messages=[
                 {"role": "user", "content": prompt}
             ],
