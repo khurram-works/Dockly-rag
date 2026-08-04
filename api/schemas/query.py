@@ -11,13 +11,13 @@ class QueryRequest(BaseModel):
     )
 
 class SourceReference(BaseModel):
-    documentId: str = Field(alias="documentId")
-    filename: str
-    pageNumbers: list[int] = Field(alias="pageNumbers")  # Use lowercase list
-    chunkIndex: int = Field(alias="chunkIndex")
+    documentId: str | None = None
+    filename: str | None = None
+    pageNumbers: list[int] = []
+    chunkIndex: int | None = None
 
 class QueryResponse(BaseModel):
     answer: str
-    sources: list[SourceReference] | None = None  # Use lowercase list
+    sources: list[SourceReference] | None = None
     foundAnswer: bool
     success: bool

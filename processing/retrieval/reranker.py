@@ -12,6 +12,4 @@ class Reranker:
     ) -> List[dict]:
         """Rerank results based on query relevance."""
         
-        # Simple implementation: return as-is
-        # Advanced: Use cross-encoder for reranking
         return results[:top_k]
