@@ -2,12 +2,10 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-
     qdrant_url: str
     qdrant_api_key: str
-
     groq_api_key: str
-
+    groq_model_name: str = "llama-3.1-8b-instant"
     node_backend_url: str
     frontend_url: str
     qdrant_collection_name: str

@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends
+import logging
 
 from api.controllers.document_controller import (
     DocumentController,
@@ -12,8 +13,8 @@ from api.schemas.document_processing import (
     ProcessDocumentRequest,
     ProcessDocumentResponse,
 )
-import logging
 
+from infrastructure.qdrant.qdrant_vector_store import QdrantVectorStore
 from fastapi import APIRouter, Depends, HTTPException
 from api.schemas.query import QueryRequest, QueryResponse
 from processing.retrieval.retriever import VectorRetriever
@@ -23,11 +24,10 @@ from processing.generation.answer_generator import AnswerGenerator
 from processing.generation.citation_builder import CitationBuilder
 from api.dependencies.document_dependencies import (
     get_vector_store,
-    get_embedding_service,
+    get_embedding_provider,
     get_qdrant_client,
 )
 from core.config.settings import settings
-
 
 router = APIRouter(
     prefix="/api",
@@ -55,7 +55,7 @@ def process_document(
 def query_documents(
     request: QueryRequest,
     vector_store = Depends(get_vector_store),
-    embedding_service = Depends(get_embedding_service),
+    embedding_provider = Depends(get_embedding_provider),
     qdrant_client = Depends(get_qdrant_client),
 ) -> QueryResponse:
     """Query documents and generate an answer."""
@@ -63,8 +63,7 @@ def query_documents(
     try:
         
         retriever = VectorRetriever(
-            # vector_store=vector_store,
-            embedding_provider=embedding_service._provider,
+            embedding_provider=embedding_provider,
             qdrant_client=qdrant_client,
             collection_name=settings.qdrant_collection_name,
         )
@@ -73,13 +72,11 @@ def query_documents(
         reranker = Reranker()
         answer_generator = AnswerGenerator()
         citation_builder = CitationBuilder()
-        
 
         rewritten_query = query_rewriter.rewrite(
             query=request.question,
             conversation_history=request.conversationHistory,
         )
-        
 
         retrieved_results = retriever.retrieve(
             query=rewritten_query,
@@ -128,6 +125,22 @@ def query_documents(
         raise HTTPException(
             status_code=500,
             detail=f"Query failed: {str(e)}"
+        )
+
+
+@router.delete("/delete-document/{document_id}")
+def delete_document(
+    document_id: str,
+    vector_store: QdrantVectorStore = Depends(get_vector_store),
+):
+    try:
+        vector_store.delete_points_by_document_id(document_id=document_id)
+        return {"success": True, "documentId": document_id}
+    except Exception as e:
+        logging.error(f"Failed to delete document {document_id}: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to delete document {document_id}: {str(e)}"
         )
 
 
