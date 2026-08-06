@@ -44,3 +44,16 @@ class QdrantVectorStore(VectorStore):
             collection_name=self._collection_name,
             points=qdrant_points,
         )
+
+    def delete_points_by_document_id(self, document_id: str) -> None:
+        self._client.delete(
+            collection_name=self._collection_name,
+            points_selector=models.Filter(
+                must=[
+                    models.FieldCondition(
+                        key="document_id",
+                        match=models.MatchValue(value=document_id),
+                    )
+                ]
+            ),
+        )

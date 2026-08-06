@@ -8,6 +8,10 @@ from core.config.settings import settings
 from infrastructure.qdrant.qdrant_client import create_qdrant_client
 from infrastructure.qdrant.qdrant_collection_manager import QdrantCollectionManager
 from domain.models.vector_collection_config import VectorCollectionConfig
+from core.constants import EMBEDDING_DIMENSION
+
+
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -17,7 +21,7 @@ async def lifespan(app: FastAPI):
         collection_manager = QdrantCollectionManager(client=client)
         config = VectorCollectionConfig(
             collection_name=settings.qdrant_collection_name,
-            vector_size=1024,
+            vector_size=EMBEDDING_DIMENSION,
             distance=Distance.COSINE,
         )
         
@@ -35,7 +39,6 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-app.include_router(document_router)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[settings.frontend_url, settings.node_backend_url],
@@ -43,6 +46,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(document_router)
 
 @app.get("/health")
 def health_check():
