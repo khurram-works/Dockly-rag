@@ -74,14 +74,15 @@ class AnswerGenerator:
                     {
                         "role": "system",
                         "content": (
-                            "You are an AI assistant that answers user questions using only the supplied context. "
-                            "Every chunk contains a 'source' and 'page' key. Use this metadata to cite specific "
-                            "documents and page numbers when referencing sources. If the context does not "
-                            "contain the answer, state that you do not know."
+                            "You are an AI assistant that answers questions using only the provided context. "
+                            "Integrate source citations naturally at the end of your sentences or paragraphs "
+                            "using standard markdown format, for example: (Source: file.pdf, Page: 1). "
+                            "Never repeat or print structural headers like 'Context 1' or '[Source: ...]' verbatim in your output. "
+                            "Only return your natural language answer and its citations."
                         ),
                     },
                     {"role": "user", "content": prompt},
-                ],
+                ],                
                 temperature=0.1,
                 max_tokens=1024,
             )

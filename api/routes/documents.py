@@ -98,11 +98,19 @@ def query_documents(
             top_k=3,
         )
         
-
-        context_chunks = [
-            result["payload"]["text"]
-            for result in reranked_results
-        ]
+        context_chunks = []
+        for result in reranked_results:
+            payload = result.get("payload", {})
+            
+            pages = payload.get("page_numbers", "Unknown Page")
+            if isinstance(pages, list):
+                pages = ", ".join(map(str, pages))
+        
+            context_chunks.append({
+                "text": payload.get("text", ""),
+                "source": payload.get("filename", "Unknown Document"),  # <-- Fixed key
+                "page": pages                                           # <-- Fixed key
+            })
         
 
         answer = answer_generator.generate(
@@ -111,11 +119,17 @@ def query_documents(
             conversation_history=request.conversationHistory,
         )
         
-        sources = citation_builder.build_citations(reranked_results)
+        raw_sources = citation_builder.build_citations(reranked_results)
+        sources = []
+        if raw_sources:
+            for source in raw_sources:
+                filename = source.get("filename", "")
+                if filename and filename in answer:
+                    sources.append(source)
         
         return QueryResponse(
             answer=answer,
-            sources=sources,
+            sources=sources if sources else raw_sources,
             foundAnswer=True,
             success=True,
         )

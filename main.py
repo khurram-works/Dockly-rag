@@ -24,7 +24,6 @@ async def lifespan(app: FastAPI):
             vector_size=EMBEDDING_DIMENSION,
             distance=Distance.COSINE,
         )
-        
         collection_manager.ensure_collection(config)
         print(f"Qdrant collection '{settings.qdrant_collection_name}' ready!")
     except Exception as e:
